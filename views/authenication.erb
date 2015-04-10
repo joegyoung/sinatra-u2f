@@ -1,0 +1,87 @@
+
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Ruby U2F Example</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700' rel='stylesheet' type='text/css'>
+    <style type="text/css">
+      body { font-family: 'Source Sans Pro', sans-serif; }
+    </style>
+   <%= javascript_include_tag 'application' %>
+  </head>
+  <body>
+    <!--[if lt IE 7]>
+      <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+    <![endif]-->
+    <div class="container">
+      <div class='row'>
+  <div class='col-md-4 col-md-offset-4 page-header'>
+    <h2>Validate key</h2>
+  </div>
+</div>
+<div class='row'>
+  <div class='col-md-4 col-md-offset-4'>
+    <p class='lead'>
+      Please insert a registered key and press the button within 15 seconds
+    </p>
+    <p class='text-center text-success well' id='waiting'>
+      Waiting...
+    </p>
+    <p class='alert alert-danger' id='error' style='display: none;'></p>
+  </div>
+</div>
+<div class='row'>
+  <div class='col-md-4 col-md-offset-4'>
+    <p>
+      <a href='/'>&laquo; Back to main page</a>
+    </p>
+  </div>
+</div>
+<form action="/authentications" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="8761c577336393794452f4edc284c8f7" /><input type="hidden" name="response" />
+</form>
+<script>
+  var signRequests = <%= @sign_requests.to_json_without_active_support_encoder %>;
+  var $waiting = document.getElementById('waiting');
+  var $error = document.getElementById('error');
+  var errorMap = {
+    1: 'Unknown error, try again',
+    2: "Bad request error, try again" ,
+    3: "This key isn't supported, please try another one",
+    4: 'The device is not registered, please register first',
+    5: 'Authentication timed out. Please reload to try again.'
+  };
+  var setError = function(code) {
+    $waiting.style.display = 'none';
+    $error.style.display = 'block';
+    $error.innerHTML = errorMap[code];
+  };
+  
+  u2f.sign(signRequests, function(signResponse) {
+    var form, reg;
+  
+    if (signResponse.errorCode) {
+      return setError(signResponse.errorCode);
+    }
+  
+    form = document.forms[0];
+    response = document.querySelector('[name=response]');
+  
+    response.value = JSON.stringify(signResponse);
+  
+    form.submit();
+  }, 15);
+</script>
+
+    </div>
+    <!-- TODO: warn if u2f can be found -->
+  </body>
+</html>
